@@ -1,0 +1,15 @@
+# Core (pin versions you use in production as needed)
+Django>=5.0,<5.1
+djangorestframework
+django-cors-headers
+django-filter
+djangorestframework-simplejwt
+python-dotenv
+psycopg2-binary
+Pillow
+scikit-image>=0.22.0
+numpy
+
+# AWS S3 media storage
+django-storages[s3]
+boto3

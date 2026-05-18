@@ -1,0 +1,7 @@
+# Environment & secrets (do not commit)
+.env
+.env.*
+
+# Firebase service account (do not commit)
+firebasekey.json
+firbase_key.json

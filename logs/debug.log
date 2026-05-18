@@ -1,0 +1,4 @@
+INFO 2026-01-02 21:52:46,082 autoreload Watching for file changes with StatReloader
+INFO 2026-01-02 21:54:17,336 autoreload C:\Users\User\Desktop\App backend\config\settings\development.py changed, reloading.
+INFO 2026-01-02 21:54:19,520 autoreload Watching for file changes with StatReloader
+INFO 2026-01-02 21:55:19,848 autoreload C:\Users\User\Desktop\App backend\config\settings\development.py changed, reloading.
