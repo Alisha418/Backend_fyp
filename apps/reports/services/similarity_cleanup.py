@@ -83,17 +83,17 @@ def _before_min_peak() -> float:
 
 def _scene_similarity_min() -> float:
     """Min cosine similarity between before/after image embeddings (0–1)."""
-    return float(getattr(settings, 'CLEANUP_SCENE_SIMILARITY_MIN', 0.30))
+    return float(getattr(settings, 'CLEANUP_SCENE_SIMILARITY_MIN', 0.38))
 
 
 def _patch_similarity_min() -> float:
     """Min visual match of the YOLO waste-area crop (0–1). Catches unrelated photos."""
-    return float(getattr(settings, 'CLEANUP_PATCH_SIMILARITY_MIN', 0.07))
+    return float(getattr(settings, 'CLEANUP_PATCH_SIMILARITY_MIN', 0.12))
 
 
 def _patch_ssim_min() -> float:
     """Min SSIM on waste-area crop — same physical spot (structure still partly visible)."""
-    return float(getattr(settings, 'CLEANUP_PATCH_SSIM_MIN', 0.07))
+    return float(getattr(settings, 'CLEANUP_PATCH_SSIM_MIN', 0.12))
 
 
 def _patch_ssim_max_no_change() -> float:

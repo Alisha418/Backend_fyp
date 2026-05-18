@@ -13,3 +13,13 @@ numpy
 # AWS S3 media storage
 django-storages[s3]
 boto3
+
+# Render / production server
+gunicorn
+firebase-admin
+
+# ML (YOLO + ResNet scene match) — CPU wheels for Linux (Render)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+ultralytics
