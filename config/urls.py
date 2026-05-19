@@ -1,7 +1,10 @@
+import os
+
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -64,17 +67,25 @@ urlpatterns = [
     path('api/analytics/', include('apps.analytics.urls')),  # Alternative path
 ]
 
-# ==================== MEDIA & STATIC FILES (Development) ====================
+# ==================== MEDIA & STATIC FILES ====================
+# DEBUG=False (EC2) still needs /media/ when files live on disk (docker volume).
+_SERVE_LOCAL_MEDIA = os.getenv('SERVE_LOCAL_MEDIA', '').lower() in ('true', '1', 'yes')
+
+if settings.DEBUG or _SERVE_LOCAL_MEDIA:
+    # static() often fails when DEBUG=False; explicit serve works on EC2 docker.
+    urlpatterns += [
+        re_path(
+            r'^media/(?P<path>.*)$',
+            serve,
+            {'document_root': settings.MEDIA_ROOT},
+        ),
+    ]
+    if settings.DEBUG:
+        local_media_url = getattr(settings, 'LOCAL_MEDIA_URL', '/media/')
+        urlpatterns += static(local_media_url, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
-    # Legacy local files (hybrid S3 mode still keeps old uploads under MEDIA_ROOT)
-    local_media_url = getattr(settings, 'LOCAL_MEDIA_URL', '/media/')
-    urlpatterns += static(local_media_url, document_root=settings.MEDIA_ROOT)
-    
-    # Serve static files (CSS, JS, admin panel assets)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    
-    # Debug toolbar (install with: pip install django-debug-toolbar)
     try:
         import debug_toolbar
         urlpatterns = [
