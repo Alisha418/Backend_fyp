@@ -26,14 +26,13 @@ services:
       - .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.development
-      DEBUG: "True"
+      # DEBUG / ALLOWED_HOSTS: .env se (EC2 par DEBUG=False, apna public IP)
       # Inside Docker network, DB host is service name "db", not localhost
       DB_HOST: db
       DB_PORT: "5432"
       DB_NAME: neat_now_db
       DB_USER: postgres
       DB_PASSWORD: admin
-      ALLOWED_HOSTS: localhost,127.0.0.1,web,0.0.0.0
     volumes:
       - ./media:/app/media
       - ./model_ml:/app/model_ml
