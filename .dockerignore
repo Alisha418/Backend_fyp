@@ -1,0 +1,30 @@
+# Git / IDE
+.git
+.gitignore
+.cursor
+.vscode
+.elasticbeanstalk
+
+# Python
+__pycache__
+*.py[cod]
+*.egg-info
+.venv
+venv
+env
+
+# Local env & secrets (mount or pass via compose env instead)
+.env
+*.pem
+firebasekey.json
+firbase_key.json
+
+# Large / generated (rebuild or mount as needed)
+media/
+staticfiles/
+*.pt
+*.pth
+
+# OS
+.DS_Store
+Thumbs.db

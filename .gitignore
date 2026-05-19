@@ -5,3 +5,8 @@
 # Firebase service account (do not commit)
 firebasekey.json
 firbase_key.json
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

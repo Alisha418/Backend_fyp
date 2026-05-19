@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: neat_now_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d neat_now_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    # Optional: load extra vars from .env (SECRET_KEY, AWS, Firebase, etc.)
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+      DEBUG: "True"
+      # Inside Docker network, DB host is service name "db", not localhost
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: neat_now_db
+      DB_USER: postgres
+      DB_PASSWORD: admin
+      ALLOWED_HOSTS: localhost,127.0.0.1,web,0.0.0.0
+    volumes:
+      - ./media:/app/media
+      - ./model_ml:/app/model_ml
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
