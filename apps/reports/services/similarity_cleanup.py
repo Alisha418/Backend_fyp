@@ -93,7 +93,7 @@ def _patch_similarity_min() -> float:
 
 def _patch_ssim_min() -> float:
     """Min SSIM on waste-area crop — same physical spot (structure still partly visible)."""
-    return float(getattr(settings, 'CLEANUP_PATCH_SSIM_MIN', 0.12))
+    return float(getattr(settings, 'CLEANUP_PATCH_SSIM_MIN', 0.09))
 
 
 def _patch_ssim_max_no_change() -> float:
@@ -262,16 +262,26 @@ def _area_same_place_ok(
     ssim_min: float,
 ) -> bool:
     """
-    Same waste area if patch OR SSIM passes, or blended score is enough.
+    Same waste area if patch OR SSIM passes (integer % to match UI), or blend is enough.
     After cleanup SSIM often 0.25–0.85; unrelated crops are usually lower on both.
     """
-    if ssim_val is None:
-        return patch_sim >= patch_min
-    if patch_sim >= patch_min or ssim_val >= ssim_min:
+    patch_pct = int(round(float(patch_sim) * 100))
+    patch_need = int(round(float(patch_min) * 100))
+
+    if patch_pct >= patch_need:
         return True
-    blend = 0.35 * patch_sim + 0.65 * ssim_val
-    blend_min = 0.35 * patch_min + 0.65 * ssim_min
-    return blend >= blend_min
+
+    if ssim_val is None:
+        return False
+
+    ssim_pct = int(round(float(ssim_val) * 100))
+    ssim_need = int(round(float(ssim_min) * 100))
+    if ssim_pct >= ssim_need:
+        return True
+
+    blend = 0.35 * float(patch_sim) + 0.65 * float(ssim_val)
+    blend_min = 0.35 * float(patch_min) + 0.65 * float(ssim_min)
+    return int(round(blend * 100)) >= int(round(blend_min * 100))
 
 
 def _area_metrics_payload(
