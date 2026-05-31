@@ -326,18 +326,80 @@ class WorkerFeedbackDashboardView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
+    def _resolve_account_id_and_role(self, request):
+        """
+        Mirrors the defensive user-resolution used by the notifications view
+        so this endpoint works whether DRF gives us an Account instance, a
+        SimpleJWT TokenUser, or a dict-shaped principal. Previously this view
+        assumed `request.user` always exposed `.role`, which silently 500'd
+        for token-only users — feedback was being created (citizen flow works
+        and notifications were arriving) but the worker's "View Feedback"
+        screen always came back empty because of the 500.
+        """
+        user = request.user
+
+        # Real Account model instance.
+        if hasattr(user, 'account_id') and getattr(user, 'role', None):
+            return user.account_id, str(user.role).lower()
+
+        # Dict-shaped principal (rare, legacy custom auth path).
+        if isinstance(user, dict):
+            account_id = user.get('account_id') or user.get('id') or user.get('user_id')
+            role = (user.get('role') or '').lower()
+            return account_id, role
+
+        # SimpleJWT TokenUser or any object that just carries an `id` —
+        # decode the raw bearer token and pull claims directly.
+        try:
+            from rest_framework_simplejwt.tokens import UntypedToken
+            from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+
+            auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+            if auth_header.startswith('Bearer '):
+                raw = auth_header.split(' ', 1)[1]
+                try:
+                    token = UntypedToken(raw)
+                    account_id = (
+                        token.get('account_id')
+                        or token.get('user_id')
+                        or token.get('id')
+                    )
+                    role = (token.get('role') or '').lower()
+                    return account_id, role
+                except (InvalidToken, TokenError) as exc:
+                    logger.error(
+                        f'WorkerFeedbackDashboardView: token decode failed: {exc}'
+                    )
+        except Exception as exc:  # pragma: no cover — extra safety
+            logger.error(
+                f'WorkerFeedbackDashboardView: user resolve unexpected error: {exc}'
+            )
+
+        return None, None
+
     def get(self, request):
         try:
-            user = request.user
+            account_id, role = self._resolve_account_id_and_role(request)
 
-            if user.role != 'Worker':
+            if not account_id:
+                return Response({
+                    'success': False,
+                    'message': 'Unable to identify authenticated user'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+
+            # Case-insensitive role check — DB values are 'Worker' / 'Citizen'
+            # but tokens may carry lowercase variants from older clients.
+            if role and role != 'worker':
                 return Response({
                     'success': False,
                     'message': 'Only workers can access this endpoint'
                 }, status=status.HTTP_403_FORBIDDEN)
 
+            # Look up the Worker by account_id (Worker.worker_id is a
+            # OneToOneField primary key referencing Account, so this is a
+            # PK lookup, not a join).
             try:
-                worker = Worker.objects.get(worker_id=user)
+                worker = Worker.objects.get(worker_id__account_id=account_id)
             except Worker.DoesNotExist:
                 return Response({
                     'success': False,
