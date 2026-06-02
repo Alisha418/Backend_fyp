@@ -135,23 +135,27 @@ def send_push_for_notification(notification) -> bool:
         if key in message_data and message_data[key] is not None:
             data[key] = str(message_data[key])
 
-    channel_id = _android_channel_for_type(ntype)
-
+    # Send DATA-ONLY FCM so Android does NOT auto-display the message in the
+    # system tray while the app is in background/killed. The Flutter side
+    # (`FcmService` foreground listener + background isolate) will show a
+    # single local notification using the app's own channels and tap
+    # navigation. Sending both `notification` + `data` would cause Android
+    # to display the system banner AND the headless background handler to
+    # display a local one — producing two duplicate banners per push.
     try:
         message = messaging.Message(
-            notification=messaging.Notification(title=title, body=body),
             data=data,
             token=token,
-            android=messaging.AndroidConfig(
-                priority='high',
-                notification=messaging.AndroidNotification(
-                    channel_id=channel_id,
-                    priority='high',
+            android=messaging.AndroidConfig(priority='high'),
+            apns=messaging.APNSConfig(
+                headers={'apns-priority': '10'},
+                payload=messaging.APNSPayload(
+                    aps=messaging.Aps(content_available=True),
                 ),
             ),
         )
         response = messaging.send(message)
-        logger.info(
+        logger.warning(
             'FCM push sent notification_id=%s account=%s response=%s',
             getattr(notification, 'notification_id', '?'),
             recipient_id,
@@ -197,20 +201,18 @@ def send_push_to_account(
     payload = {str(k): str(v) for k, v in (data or {}).items()}
     payload.setdefault('title', title)
     payload.setdefault('body', body)
-    ntype = payload.get('type', 'general')
-    channel_id = _android_channel_for_type(ntype)
 
+    # Data-only (see send_push_for_notification for rationale on duplicate prevention).
     try:
         messaging.send(
             messaging.Message(
-                notification=messaging.Notification(title=title, body=body),
                 data=payload,
                 token=token,
-                android=messaging.AndroidConfig(
-                    priority='high',
-                    notification=messaging.AndroidNotification(
-                        channel_id=channel_id,
-                        priority='high',
+                android=messaging.AndroidConfig(priority='high'),
+                apns=messaging.APNSConfig(
+                    headers={'apns-priority': '10'},
+                    payload=messaging.APNSPayload(
+                        aps=messaging.Aps(content_available=True),
                     ),
                 ),
             )

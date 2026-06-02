@@ -63,7 +63,10 @@ _before_detection_cache: Dict[int, Dict[str, Any]] = {}
 
 
 def _max_distance_meters() -> float:
-    return float(getattr(settings, 'WORKER_RESOLVE_MAX_DISTANCE_METERS', 30.0))
+    # Default 1000m (1 km). Override with WORKER_RESOLVE_MAX_DISTANCE_METERS env
+    # var. The settings.py default matches this — keeping them in sync ensures
+    # a missing env var doesn't silently fall back to the old 30m threshold.
+    return float(getattr(settings, 'WORKER_RESOLVE_MAX_DISTANCE_METERS', 1000.0))
 
 
 def _min_waste_reduction_ratio() -> float:

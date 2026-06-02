@@ -182,8 +182,11 @@ WASTE_MIN_CONFIDENCE = float(os.getenv('WASTE_MIN_CONFIDENCE', '0.20'))
 WASTE_MIXED_MIN_CONFIDENCE = float(os.getenv('WASTE_MIXED_MIN_CONFIDENCE', '0.20'))
 
 # Worker resolve: GPS + image similarity + before/after waste (similarity_cleanup.py)
+# Max distance a worker may be from the report site when uploading the after
+# photo. Bumped from 30m → 1000m (1 km) to accommodate large parks / zones
+# where the reported coordinate is not exactly where the cleanup happened.
 WORKER_RESOLVE_MAX_DISTANCE_METERS = float(
-    os.getenv('WORKER_RESOLVE_MAX_DISTANCE_METERS', '30'),
+    os.getenv('WORKER_RESOLVE_MAX_DISTANCE_METERS', '1000'),
 )
 CLEANUP_SCENE_SIMILARITY_MIN = float(os.getenv('CLEANUP_SCENE_SIMILARITY_MIN', '0.38'))
 CLEANUP_PATCH_SIMILARITY_MIN = float(os.getenv('CLEANUP_PATCH_SIMILARITY_MIN', '0.12'))

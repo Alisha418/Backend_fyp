@@ -36,6 +36,9 @@ services:
     volumes:
       - ./media:/app/media
       - ./model_ml:/app/model_ml
+      # Firebase Admin SDK service account key for FCM push notifications.
+      # Mounted read-only from host so the secret stays out of the image.
+      - ./firbase_key.json:/app/firbase_key.json:ro
     depends_on:
       db:
         condition: service_healthy
